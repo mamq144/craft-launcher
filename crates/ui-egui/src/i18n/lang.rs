@@ -93,8 +93,21 @@ pub(super) fn plural_polish(n: u64) -> usize {
     }
 }
 
+/// Arabic (CLDR `ar`, integer counts): zero (0), one (1), two (2), few (3–10, 103–110),
+/// many (11–99, 111–199), other (100–102, 200–202).
+pub(super) fn plural_arabic(n: u64) -> usize {
+    match (n, n % 100) {
+        (0, _) => 0,
+        (1, _) => 1,
+        (2, _) => 2,
+        (_, 3..=10) => 3,
+        (_, 11..=99) => 4,
+        _ => 5,
+    }
+}
+
 /// The registry. English first: it is the fallback and the source language.
-pub static LANGUAGES: [LangInfo; 11] = [
+pub static LANGUAGES: [LangInfo; 12] = [
     LangInfo {
         code: "en",
         name: "English",
@@ -216,6 +229,17 @@ pub static LANGUAGES: [LangInfo; 11] = [
         complete_menus: true,
         catalog: OnceLock::new(),
     },
+    LangInfo {
+        code: "ar",
+        name: "العربية",
+        english_name: "Arabic",
+        script: None,
+        source: include_str!("ar.tsv"),
+        plural: plural_arabic,
+        plural_forms: 6,
+        complete_menus: true,
+        catalog: OnceLock::new(),
+    },
 ];
 
 impl LangInfo {
@@ -254,6 +278,7 @@ impl Lang {
     pub const PL: Lang = Lang(&LANGUAGES[8]);
     pub const HU: Lang = Lang(&LANGUAGES[9]);
     pub const JA: Lang = Lang(&LANGUAGES[10]);
+    pub const AR: Lang = Lang(&LANGUAGES[11]);
 
     pub fn code(self) -> &'static str {
         self.0.code

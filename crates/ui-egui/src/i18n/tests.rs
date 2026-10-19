@@ -4,7 +4,7 @@
 use std::collections::{BTreeSet, HashSet};
 
 use super::catalog::{Catalog, unescape};
-use super::lang::{plural_czech, plural_east_slavic, plural_polish};
+use super::lang::{plural_arabic, plural_czech, plural_east_slavic, plural_polish};
 use super::{LANGUAGES, Lang, LangInfo, lang_from_tag, message, tr, trn};
 
 /// Each catalog's rows as (line number, context, source, translation), split exactly as the
@@ -533,3 +533,22 @@ fn complete_catalogs_translate_package_formats() {
         }
     }
 }
+
+#[test]
+fn arabic_locales_and_plurals_work() {
+    for tag in ["ar", "ar-SA", "ar-EG", "ar-AE", "ar-MA", "ar_SA.UTF-8"] {
+        assert_eq!(lang_from_tag(tag), Some(Lang::AR), "{tag}");
+    }
+    assert_eq!(super::detect::first_supported(["xx-XX", "ar-SA", "en-US"]), Some(Lang::AR));
+    assert_eq!(plural_arabic(0), 0);
+    assert_eq!(plural_arabic(1), 1);
+    assert_eq!(plural_arabic(2), 2);
+    for n in 3..=10 {
+        assert_eq!(plural_arabic(n), 3);
+    }
+    for n in 11..=99 {
+        assert_eq!(plural_arabic(n), 4);
+    }
+    assert_eq!(plural_arabic(100), 5);
+}
+
