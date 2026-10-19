@@ -13,11 +13,12 @@ use super::detect::system_lang;
 pub enum Script {
     Chinese,
     Japanese,
+    Arabic,
 }
 
 impl Script {
     /// Every script a language can be written in.
-    pub const ALL: [Script; 2] = [Script::Chinese, Script::Japanese];
+    pub const ALL: [Script; 3] = [Script::Chinese, Script::Japanese, Script::Arabic];
 }
 
 /// One supported UI language.
@@ -233,7 +234,7 @@ pub static LANGUAGES: [LangInfo; 12] = [
         code: "ar",
         name: "العربية",
         english_name: "Arabic",
-        script: None,
+        script: Some(Script::Arabic),
         source: include_str!("ar.tsv"),
         plural: plural_arabic,
         plural_forms: 6,
