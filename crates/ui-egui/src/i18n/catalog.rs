@@ -120,8 +120,8 @@ impl Catalog {
                 "@id" => cat.by_id.insert(source_text.clone(), translation).is_some(),
                 "@plural" => {
                     let forms: Vec<String> = translation.split('|').map(str::to_string).collect();
-                    if forms.len() > 3 {
-                        log::warn!("i18n catalog: line {line_no}: @plural expects 1 to 3 forms separated by '|', got {}", forms.len());
+                    if forms.len() > 6 {
+                        log::warn!("i18n catalog: line {line_no}: @plural expects 1 to 6 forms separated by '|', got {}", forms.len());
                         continue;
                     }
                     cat.plural.insert(source_text.clone(), forms).is_some()
