@@ -321,6 +321,11 @@ impl Lang {
     }
 
     /// Does this language's catalog claim to cover every `tl!` literal?
+    /// Does this language read right-to-left?
+    pub fn is_rtl(self) -> bool {
+        matches!(self.0.script, Some(Script::Arabic))
+    }
+
     pub fn complete_menus(self) -> bool {
         self.0.complete_menus
     }
