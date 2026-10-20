@@ -551,4 +551,3 @@ fn arabic_locales_and_plurals_work() {
     }
     assert_eq!(plural_arabic(100), 5);
 }
-
