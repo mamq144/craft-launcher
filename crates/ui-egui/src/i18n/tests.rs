@@ -551,3 +551,15 @@ fn arabic_locales_and_plurals_work() {
     }
     assert_eq!(plural_arabic(100), 5);
 }
+
+#[test]
+fn arabic_bidi_and_templates_work() {
+    assert_eq!(tr(Lang::AR, "Search apps"), "التطبيقات في البحث");
+    assert_eq!(tr(Lang::AR, "Sort"), "فرز");
+    assert_eq!(tr(Lang::AR, "Name (A–Z)"), "(أ–ي) الاسم");
+    assert_eq!(super::translate::fmt(tr(Lang::AR, "Last updated: {date}"), &[("date", "2026-10-20")]), "20-10-2026 تحديث: آخر");
+    assert_eq!(
+        trn(Lang::AR, 3, "ArtCraft Launcher · {n} update available", "ArtCraft Launcher · {n} updates available"),
+        "متوفرة تحديثات ArtCraft Launcher · 3"
+    );
+}
