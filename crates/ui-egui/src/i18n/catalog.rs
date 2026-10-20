@@ -115,7 +115,11 @@ impl Catalog {
                 continue;
             };
             let (context, source_text, translation) = (unescape(context), unescape(source_text), unescape(translation));
-            let display_text = if super::bidi::has_rtl(&translation) { super::bidi::reorder(&translation).into_owned() } else { translation.clone() };
+            let display_text = if !translation.contains('{') && super::bidi::has_rtl(&translation) {
+                super::bidi::reorder(&translation).into_owned()
+            } else {
+                translation.clone()
+            };
             let duplicate = match context.as_str() {
                 "" => cat.plain.insert(source_text.clone(), display_text).is_some(),
                 "@id" => cat.by_id.insert(source_text.clone(), display_text).is_some(),

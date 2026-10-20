@@ -1,12 +1,14 @@
 //! Bidirectional text handling (UAX #9) for RTL interface languages such as Arabic.
 //!
-//! Reorders mixed RTL/LTR runs into visual presentation order while preserving logical
-//! character order within each run so OpenType shaping (HarfRust) produces correct cursive glyphs.
+//! Reorders mixed RTL/LTR runs and words into visual presentation order so that
+//! `egui`/`epaint`'s left-to-right galley layout renders Arabic sentences naturally
+//! from right to left while preserving logical character order within each word for
+//! OpenType cursive shaping (HarfRust).
 
 use std::borrow::Cow;
 use unicode_bidi::{BidiInfo, Level};
 
-/// Reorder text with mixed directionality into visual run order for layout and display.
+/// Reorder text with mixed directionality into visual presentation order for layout and display.
 pub fn reorder(text: &str) -> Cow<'_, str> {
     if !has_rtl(text) {
         return Cow::Borrowed(text);
@@ -29,16 +31,45 @@ pub fn reorder(text: &str) -> Cow<'_, str> {
             let is_rtl = levels[run.start].is_rtl();
             let slice = &text[run.clone()];
             if is_rtl {
-                // Mirror paired punctuation / brackets within RTL runs.
-                for c in slice.chars() {
-                    result.push(mirror_char(c));
-                }
+                reverse_tokens(slice, &mut result);
             } else {
                 result.push_str(slice);
             }
         }
     }
     Cow::Owned(result)
+}
+
+/// Reverse tokens (words and whitespace blocks) within an RTL run so words appear in
+/// visual reading order from right to left, while preserving character order within
+/// each word for OpenType cursive shaping.
+fn reverse_tokens(slice: &str, out: &mut String) {
+    let mut tokens = Vec::new();
+    let mut curr_start = 0;
+    let mut in_whitespace = None;
+
+    for (byte_idx, ch) in slice.char_indices() {
+        let is_ws = ch.is_whitespace();
+        match in_whitespace {
+            None => {
+                in_whitespace = Some(is_ws);
+            }
+            Some(ws) if ws != is_ws => {
+                tokens.push(&slice[curr_start..byte_idx]);
+                curr_start = byte_idx;
+                in_whitespace = Some(is_ws);
+            }
+            _ => {}
+        }
+    }
+    if curr_start < slice.len() {
+        tokens.push(&slice[curr_start..]);
+    }
+
+    tokens.reverse();
+    for token in tokens {
+        out.push_str(token);
+    }
 }
 
 /// Does this text contain any right-to-left characters (Arabic, Hebrew, etc.)?
@@ -59,19 +90,32 @@ pub fn is_rtl_char(c: char) -> bool {
     )
 }
 
-/// Mirror brackets/parentheses for RTL context per Unicode BidiMirroring.txt.
-fn mirror_char(c: char) -> char {
-    match c {
-        '(' => ')',
-        ')' => '(',
-        '[' => ']',
-        ']' => '[',
-        '{' => '}',
-        '}' => '{',
-        '<' => '>',
-        '>' => '<',
-        '«' => '»',
-        '»' => '«',
-        _ => c,
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pure_arabic_reorders_words_for_visual_reading() {
+        assert_eq!(reorder("تعديل ومعالجة الصور"), "الصور ومعالجة تعديل");
+        assert_eq!(reorder("البحث في التطبيقات"), "التطبيقات في البحث");
+        assert_eq!(reorder("تسجيل وتحرير ومكساج الصوت"), "الصوت ومكساج وتحرير تسجيل");
+    }
+
+    #[test]
+    fn mixed_english_and_arabic_reorders_correctly() {
+        assert_eq!(reorder("يتوفر إصدار ArtCraft Launcher 0.5.1."), ".ArtCraft Launcher 0.5.1 إصدار يتوفر");
+        assert_eq!(reorder("ArtCraft Launcher · 3 تحديثات متوفرة"), "متوفرة تحديثات ArtCraft Launcher · 3");
+    }
+
+    #[test]
+    fn parenthesized_sort_labels_reorder_correctly() {
+        assert_eq!(reorder("الاسم (أ–ي)"), "(أ–ي) الاسم");
+        assert_eq!(reorder("الاسم (ي–أ)"), "(ي–أ) الاسم");
+    }
+
+    #[test]
+    fn english_only_text_is_unmodified() {
+        let text = "ArtCraft Launcher";
+        assert_eq!(reorder(text), text);
     }
 }

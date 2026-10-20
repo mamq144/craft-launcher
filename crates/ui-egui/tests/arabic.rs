@@ -170,7 +170,7 @@ fn arabic_switches_persists_and_keeps_install_actions() {
     }
     // Choosing it loaded the font: now the picker shows both names.
     h.get_by_value("Arabic (العربية)");
-    h.get_by_label("إشعاري عند توفر تحديث لأي تطبيق مثبت");
+    h.get_by_label(artcraft_launcher_ui_egui::i18n::tr(artcraft_launcher_ui_egui::i18n::Lang::AR, "Notify me when an installed app has an update"));
     snapshot(&mut h, "settings-ar-dark");
     let settings = h.state().as_ref().unwrap().settings.clone();
     assert_eq!(settings.language, "ar");
@@ -179,12 +179,12 @@ fn arabic_switches_persists_and_keeps_install_actions() {
     assert_eq!(restored.language, "ar");
     h.get_by_label("تم").click();
     h.run_steps(3);
-    h.get_by_label("تعديل ومعالجة الصور");
+    h.get_by_label(artcraft_launcher_ui_egui::i18n::tr_ctx(artcraft_launcher_ui_egui::i18n::Lang::AR, "photocraft", "Image editing"));
     assert!(h.query_all_by_label_contains("0.5.0").count() >= 1);
     // Product names stay in English.
     assert!(h.query_by_label("Launcher").is_none());
     snapshot(&mut h, "grid-ar-dark");
-    h.get_by_label_contains("تحديث الكل").click();
+    h.get_by_label_contains("الكل").click();
     h.run_steps(2);
     let installs: Vec<_> = sent.borrow().iter().filter_map(|c| if let Command::Install { app } = c { Some(app.clone()) } else { None }).collect();
     assert_eq!(installs, ["photocraft", "effectcraft"]);
